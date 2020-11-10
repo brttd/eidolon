@@ -1,0 +1,11 @@
+{
+  "name": "eidolon",
+  "version": "0.0.1",
+  "description": "Personal project for the Raspberry PI",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Brett Doyle",
+  "license": "ISC"
+}
