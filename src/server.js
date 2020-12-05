@@ -1,8 +1,9 @@
 import sirv from 'sirv';
 import polka from 'polka';
-import WebSocket from 'ws';
 import compression from 'compression';
 import * as sapper from '@sapper/server';
+
+import * as system from './system';
 
 const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
@@ -17,17 +18,4 @@ let server = polka() // You can also use Express
 		if (err) console.log('error', err);
 	});
 
-const wss = new WebSocket.Server({
-	server: server.server,
-	clientTracking: true,
-});
-
-wss.on('connection', function (ws) {
-	ws.on('message', function (message) {
-		wss.clients.forEach(client => {
-			if (client !== ws && client.readyState === WebSocket.OPEN) {
-				client.send(message);
-			}
-		});
-	});
-})
+system.start(server.server);
