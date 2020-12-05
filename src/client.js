@@ -74,9 +74,9 @@ Window.socket = function() {
 		webSocket.onclose = function(err) {
 			console.warn('SOCKET: Closed', err);
 
-			lastConnectTime += 100;
+			lastConnectTime += 250;
 
-			setTimeout(setupSocket, Math.min(2000, lastConnectTime));
+			setTimeout(setupSocket, Math.min(10000, lastConnectTime));
 		}
 		
 		webSocket.onopen = function() {
