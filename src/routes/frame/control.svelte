@@ -1,6 +1,8 @@
 <script>
     let url = '';
 
+    let temp = 0;
+
     let presets = [
         {
             url: 'http://www.fallingfalling.com/'
@@ -47,18 +49,29 @@
 
         setUrl();
     }
+
+    if (typeof Window !== 'undefined') {
+        Window.socket.on('stats', function(data) {
+            temp = Math.round(data.temp / 1000);
+        });
+    }
 </script>
 
 <style>
     .container {
     }
 
-    .main {
+    .main, .header {
         display: flex;
         flex-flow: row nowrap;
+        justify-content: flex-end;
         padding: 1em;
 
         border-bottom: 1px solid black;
+    }
+
+    .presets {
+        padding: 0;
     }
 
     input, button {
@@ -70,21 +83,23 @@
         border-radius: 3px;
     }
 
+    button {
+        color: #fff;
+        background-color: #a22846;
+    }
+
+    .header .info {
+        margin: 0;
+
+        flex: 0 0 auto;
+    }
+
     .main input {
         flex: 1 1 auto;
     }
     .main button {
         flex: 0 0 auto;
         margin-left: 1em;
-    }
-
-    button {
-        color: #fff;
-        background-color: #a22846;
-    }
-
-    .presets {
-        padding: 0;
     }
 
     .presets button {
@@ -95,6 +110,10 @@
 </style>
 
 <div class="container">
+    <div class="header">
+        <p class="info">{temp}°</p>
+    </div>
+
     <div class="main">
         <input type="url" bind:value={url}>
         <button on:click={setUrl}>SET</button>
