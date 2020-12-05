@@ -50,6 +50,21 @@
         setUrl();
     }
 
+    function shutdown() {
+        if (typeof Window !== 'undefined') {
+            Window.socket.send('system', {
+                action: 'shutdown'
+            });
+        }
+    }
+    function reboot() {
+        if (typeof Window !== 'undefined') {
+            Window.socket.send('system', {
+                action: 'reboot'
+            });
+        }
+    }
+
     if (typeof Window !== 'undefined') {
         Window.socket.on('stats', function(data) {
             temp = Math.round(data.temp / 1000);
@@ -94,6 +109,13 @@
         flex: 0 0 auto;
     }
 
+    .header .actions {
+        flex: 1 1 auto;
+    }
+    .header .actions button {
+        margin-right: 1em;
+    }
+
     .main input {
         flex: 1 1 auto;
     }
@@ -111,6 +133,10 @@
 
 <div class="container">
     <div class="header">
+        <div class="actions">
+            <button on:click={shutdown}>Power Off</button>
+            <button on:click={reboot}>Restart</button>
+        </div>
         <p class="info">{temp}°</p>
     </div>
 

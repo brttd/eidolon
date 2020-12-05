@@ -67,6 +67,16 @@ function start(server) {
 
     socket.start(server);
 
+    socket.on('system', message => {
+        if (message.action === 'shutdown') {
+            exec('sudo shutdown now');
+        }
+
+        if (message.action === 'reboot') {
+            exec('sudo reboot');
+        }
+    })
+
 
     setInterval(monitorStats, 3 * 1000);
 }
