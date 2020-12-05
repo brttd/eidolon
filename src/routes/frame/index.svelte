@@ -2,28 +2,97 @@
     import { slide } from 'svelte/transition';
     import { cubicOut, cubicIn } from 'svelte/easing';
     
-    let src = 'http://www.fallingfalling.com';
+    let src = 'https://graphics.brettdoyle.art/canvas/rps/';
 
-    let displayUrl = src.replace('http://', '').replace('https://', '');
+    let displayUrl = '';
+    let displayUrlMain = '';
 
     let loading = true;
+
+    let tempUnsafe = false;
+    let temp = 0;
+
+    let rotatePos = 'top left';
+    let rotateOptions = [
+        'top left',
+        'top right',
+        'bottom left',
+        'bottom right'
+    ];
+
+    function updateDisplayUrl() {
+        displayUrl = src.replace('http://', '').replace('https://', '');
+        displayUrlMain = '';
+
+        if (displayUrl.split('/').length > 0 && displayUrl.indexOf('/') !== displayUrl.length - 1) {
+            displayUrl = displayUrl.split('/');
+            displayUrlMain = displayUrl.pop();
+
+            if (displayUrlMain === '') {
+                displayUrlMain += displayUrl.pop();
+            }
+
+            displayUrl = displayUrl.join('/');
+            displayUrl += '/';
+        } else {
+            displayUrlMain = displayUrl.replace('/', '');
+            displayUrl = '';
+        }
+    }
+
+    function setLoading(a) {
+        rotatePos = rotateOptions[~~(Math.random() * rotateOptions.length)];
+
+        loading = a;
+    }
 
     if (typeof Window !== 'undefined') {
         Window.socket.on('frame', function(data) {
             if (data.url && data.url !== src) {
-                loading = true;
+                setLoading(true);
 
                 setTimeout(() => {
                     src = data.url;
+                    updateDisplayUrl();
                 }, 300);
             }
+        });
+
+        Window.socket.on('temp-unsafe', function(data) {
+            tempUnsafe = true;
+        });
+        Window.socket.on('temp-safe', function(data) {
+            setLoading(true);
+            
+            tempUnsafe = false;
+        });
+
+        Window.socket.on('stats', function(data) {
+            temp = Math.round(data.temp / 1000);
         });
     }
 
     function onFrameLoad() {
-        loading = false;
+        setLoading(false);
 
         console.log('loaded!');
+    }
+
+    updateDisplayUrl();
+
+    function rotate(node, params) {
+        let dir = 90;
+
+        if (params.origin === 'top right' || params.origin === 'bottom left') {
+            dir = -90;
+        }
+
+		return {
+			delay: params.delay || 0,
+			duration: params.duration || 400,
+			easing: params.easing || cubicOut,
+			css: (t, u) => `transform: rotate(${u * dir}deg); transform-origin: ${params.origin}`
+		};
     }
 </script>
 
@@ -42,6 +111,9 @@
 
         outline: none;
         border: none;
+
+        cursor: none;
+        pointer-events: none;
     }
 
     .loader {
@@ -59,8 +131,28 @@
 
         transform-origin: bottom right;
 
-        background-color: #6cc04a;
+        background-color: #101014;
         color: #fff;
+    }
+    .loader::before {
+        content: 'x';
+        display: block;
+
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: -100%;
+        right: -100%;
+        width: 300%;
+        height: 100%;
+
+        z-index: -1;
+
+        background-color: #101014;
+        color: transparent;
+    }
+    .loader.temp {
+        background-color: #a22846;
     }
 
     .loader .text {
@@ -70,17 +162,26 @@
         padding: 1em;
 
         font-size: 32px;
+        font-size: 48px;
+        font-weight: 100;
         text-align: center;
     }
     .loader .text .main, .loader .text .url {
         display: block;
+        margin: 0;
+    }
+    .loader .text .main {
+        margin-bottom: 0.5em;
     }
 
     .loader .text .url {
-        opacity: 0.8;
+        color: rgba(255, 255, 255, 0.6);
 
-        font-size: 24px;
-        font-family: 'Anonymous Pro', monospace;
+        font-size: 26px;
+        /*font-family: 'Anonymous Pro', monospace; */
+    }
+    .loader .text .url-main {
+        color: rgb(255, 255, 255);
     }
 </style>
 
@@ -89,17 +190,36 @@
     <style>
         html, body {
             overflow: hidden;
+
+            cursor: none;
         }
     </style>
 </svelte:head>
 
-<iframe title="Frame" {src} on:load={onFrameLoad}></iframe>
+{#if tempUnsafe}
 
-{#if loading}
-<div class="loader" in:slide="{{delay: 0, duration: 300, easing: cubicOut }}" out:slide="{{delay: 0, duration: 600, easing: cubicIn }}">
-    <p class="text">
-        <span class="main">loading</span>
-        <span class="url">{displayUrl}</span>
-    </p>
-</div>
+    <div class="loader temp"
+        in:rotate="{{delay: 0, duration: 500, easing: cubicOut, origin: rotatePos }}"
+        out:rotate="{{delay: 0, duration: 600, easing: cubicIn, origin: rotatePos  }}">
+        <p class="text">
+            <span class="main">Paused</span>
+            <span class="url">{temp}°</span>
+        </p>
+    </div>
+
+{:else}
+
+    <iframe title="Frame" {src} on:load={onFrameLoad}></iframe>
+
+    {#if loading}
+    <div class="loader"
+        in:rotate="{{delay: 0, duration: 500, easing: cubicOut, origin: rotatePos }}"
+        out:rotate="{{delay: 100, duration: 600, easing: cubicIn, origin: rotatePos  }}">
+        <div class="text">
+            <p class="main">Loading</p>
+            <p class="url">{displayUrl}<span class="url-main">{displayUrlMain}</span></p>
+        </div>
+    </div>
+    {/if}
+
 {/if}

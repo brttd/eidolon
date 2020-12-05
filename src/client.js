@@ -13,13 +13,10 @@ Window.socket = function() {
 	
 	let webSocket;
 	
-	function send(channel, message) {
-		console.debug('SOCKET: Message sent', channel, message);
+	function send(channel, data) {
+		console.debug('SOCKET: Message sent', channel, data);
 
-		webSocket.send(JSON.stringify({
-			channel: channel,
-			data: message
-		}));
+		webSocket.send(channel + '|' + JSON.stringify(data));
 	}
 
 	function listen(channel, listener) {
@@ -30,25 +27,27 @@ Window.socket = function() {
 		listeners[channel].push(listener);
 	}
 
-	function emitMessage(message) {
-		if (!Array.isArray(listeners[message.channel])) return;
+	function emitMessage(channel, data) {
+		if (!Array.isArray(listeners[channel])) return;
 
-		for (let i = 0; i < listeners[message.channel].length; i++) {
-			listeners[message.channel][i](message.data);
+		for (let i = 0; i < listeners[channel].length; i++) {
+			listeners[channel][i](data);
 		}
 	}
 
 	function handleMessage(message) {
 		try {
-			message = JSON.parse(message.data);
+			message = message.data.split('|');
 
-			if (message.channel) {
-				console.debug('SOCKET: Message recieved', message);
-
-				emitMessage(message);
-			} else {
-				console.info('SOCKET: Message invalid', message);
+			if (message.length === 1) {
+				throw new Error('Message did not contain both channel and data');
 			}
+
+			message[1] = JSON.parse(message[1]);
+
+			console.debug('SOCKET: Message recieved', message[0], message[1]);
+
+			emitMessage(message[0], message[1]);
 		} catch (err) {
 			console.error('SOCKET: Message error', err);
 		}
