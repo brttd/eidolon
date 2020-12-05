@@ -50,6 +50,12 @@
         setUrl();
     }
 
+    function onInputKey(event) {
+        if (event.code.toLowerCase() === 'enter') {
+            setUrl();
+        }
+    }
+
     function shutdown() {
         if (typeof Window !== 'undefined') {
             Window.socket.send('system', {
@@ -141,7 +147,7 @@
     </div>
 
     <div class="main">
-        <input type="url" bind:value={url}>
+        <input type="url" bind:value={url} on:keyup={onInputKey}>
         <button on:click={setUrl}>SET</button>
     </div>
     
