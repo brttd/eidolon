@@ -201,10 +201,10 @@
     <div class="loader temp"
         in:rotate="{{delay: 0, duration: 500, easing: cubicOut, origin: rotatePos }}"
         out:rotate="{{delay: 0, duration: 600, easing: cubicIn, origin: rotatePos  }}">
-        <p class="text">
-            <span class="main">Paused</span>
-            <span class="url">{temp}°</span>
-        </p>
+        <div class="text">
+            <p class="main">Paused</p>
+            <p class="url"><span class="url-main">{temp}</span>°</p>
+        </div>
     </div>
 
 {:else}
