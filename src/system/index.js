@@ -96,10 +96,27 @@ function onSystemMessage(message) {
                     message.param === 'inverted') {
 
                     exec('DISPLAY=:0 xrandr --output HDMI-1 --rotate ' + message.param, (err, stdout, stderr) => {
-                        socket.send('frame-message', {
-                            text: 'Rotated',
-                            description: message.param
-                        });
+                        if (message.param === 'left') {
+                            socket.send('frame-message', {
+                                text: 'Portrait',
+                                description: '↓'
+                            });
+                        } else if (message.param === 'right') {
+                            socket.send('frame-message', {
+                                text: 'Portrait',
+                                description: '↑'
+                            });
+                        } else if (message.param === 'normal') {
+                            socket.send('frame-message', {
+                                text: 'Landscape',
+                                description: '→'
+                            });
+                        } else if (message.param === 'inverted') {
+                            socket.send('frame-message', {
+                                text: 'Landscape',
+                                description: '←'
+                            });
+                        }
 
                         socket.send('system', {
                             rotation: message.param
