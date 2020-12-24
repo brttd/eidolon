@@ -59,7 +59,12 @@
         rotatePos = rotateOptions[~~(Math.random() * rotateOptions.length)];
 
         message.text = data.text;
-        message.description = data.description;
+
+        if (data.description) {
+            message.description = data.description;
+        } else {
+            message.description = '';
+        }
 
         message.active = true;
 
