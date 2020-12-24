@@ -63,6 +63,25 @@
         rotation: 'normal'
     };
 
+    const rotations = [
+        {
+            rotation: 'inverted',
+            icon: 'caret-square-left',
+        },
+        {
+            rotation: 'right',
+            icon: 'caret-square-up',
+        },
+        {
+            rotation: 'normal',
+            icon: 'caret-square-right',
+        },
+        {
+            rotation: 'left',
+            icon: 'caret-square-down',
+        },
+    ];
+
     let temp = 0;
 
     let url = '';
@@ -100,6 +119,15 @@
         },
     ];
 
+    function setRotation(rotation) {
+        if (typeof Window !== 'undefined') {
+            Window.socket.send('system', {
+                action: 'rotate',
+                param: rotation
+            });
+        }
+    
+    }
 
     function setUrl() {
         if (typeof Window !== 'undefined') {
@@ -166,6 +194,10 @@
         color: #fff;
         background-color: #a22846;
     }
+    button.inactive {
+        color: #a22846;
+        background-color: #fff;
+    }
     button span {
         padding: 0 0.5em;
     }
@@ -210,6 +242,14 @@
                     <button on:click={action.execute}><i class="fas fa-{action.icon} fa-fw"></i></button>
                 {:else}
                     <button on:click={action.execute}>{action.label}</button>
+                {/if}
+            {/each}
+
+            {#each rotations as option}
+                {#if option.rotation === system.rotation}
+                    <button on:click={() => {setRotation(option.rotation)}}><i class="fas fa-{option.icon} fa-fw"></i></button>
+                {:else}
+                    <button class="inactive" on:click={() => {setRotation(option.rotation)}}><i class="fas fa-{option.icon} fa-fw"></i></button>
                 {/if}
             {/each}
         </div>

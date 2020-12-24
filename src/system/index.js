@@ -100,6 +100,10 @@ function onSystemMessage(message) {
                             text: 'Rotated',
                             description: message.param
                         });
+
+                        socket.send('system', {
+                            rotation: message.param
+                        });
                     });
                 }
 
@@ -129,6 +133,12 @@ function onSystemMessage(message) {
                 exec('git pull', (err, stdout, stderr) => {
                     if (err) {
                         console.error(err);
+                        
+                        socket.send('frame-message', {
+                            text: '(Reloading) Error!',
+                            description: 'git pull failed'
+                        });
+
                         return;
                     }
 
@@ -141,6 +151,12 @@ function onSystemMessage(message) {
                     exec('npm run build', (err, stdout, stderr) => {
                         if (err) {
                             console.error(err);
+
+                            socket.send('frame-message', {
+                                text: '(Reloading) Error!',
+                                description: 'Build failed'
+                            });
+
                             return;
                         }
     
