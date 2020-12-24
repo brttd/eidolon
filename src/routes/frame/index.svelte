@@ -1,6 +1,15 @@
 <script>
     import { slide } from 'svelte/transition';
     import { cubicOut, cubicIn } from 'svelte/easing';
+
+    const message = {
+        active: false,
+
+        text: '',
+        description: '',
+    }
+
+    let messageTimeout = false;
     
     let src = 'https://graphics.brettdoyle.art/canvas/rps/';
 
@@ -46,6 +55,27 @@
         loading = a;
     }
 
+    function setMessage(data) {
+        rotatePos = rotateOptions[~~(Math.random() * rotateOptions.length)];
+
+        message.text = data.text;
+        message.description = data.description;
+
+        message.active = true;
+
+        if (messageTimeout) {
+            clearTimeout(messageTimeout);
+        }
+
+        messageTimeout = setTimeout(() => {
+            rotatePos = rotateOptions[~~(Math.random() * rotateOptions.length)];
+
+            message.active = false;
+
+            messageTimeout = false;
+        }, 1000 * 3);
+    }
+
     if (typeof Window !== 'undefined') {
         Window.socket.on('frame', function(data) {
             if (data.url && data.url !== src) {
@@ -57,6 +87,8 @@
                 }, 300);
             }
         });
+
+        Window.socket.on('frame-message', setMessage);
 
         Window.socket.on('temp-unsafe', function(data) {
             tempUnsafe = true;
@@ -221,5 +253,20 @@
         </div>
     </div>
     {/if}
+
+{/if}
+
+{#if message.active}
+
+    <div class="loader message"
+        in:rotate="{{delay: 0, duration: 500, easing: cubicOut, origin: rotatePos }}"
+        out:rotate="{{delay: 0, duration: 600, easing: cubicIn, origin: rotatePos  }}">
+        <div class="text">
+            <p class="main">{message.text}</p>
+            {#if message.description}
+                <p class="url"><span class="url-main">{message.description}</span></p>
+            {/if}
+        </div>
+    </div>
 
 {/if}

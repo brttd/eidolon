@@ -48,6 +48,14 @@ function send(channel, data) {
     });
 }
 
+function sendTo(client, channel, data) {
+    let message = channel + '|' + JSON.stringify(data);
+
+    if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+    }
+}
+
 function on(channel, listener) {
     if (!Array.isArray(listeners[channel])) {
         listeners[channel] = [];
@@ -67,6 +75,13 @@ function start(server) {
 
     socket.on('connection', function (ws, req) {
         ws.on('message', onMessage);
+
+        /*
+        sendTo(ws, 'frame-message', {
+            text: 'Connected',
+            description: req.connection.remoteAddress
+        });
+        */
     })
 }
 

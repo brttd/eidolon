@@ -1,7 +1,71 @@
 <script>
-    let url = '';
+    const actions = [
+        {
+            icon: 'power-off',
+
+            execute: () => {
+                if (typeof Window !== 'undefined') {
+                    Window.socket.send('system', {
+                        action: 'shutdown'
+                    });
+                }
+            }
+        },
+        {
+            icon: 'redo-alt',
+
+            execute: () => {
+                if (typeof Window !== 'undefined') {
+                    Window.socket.send('system', {
+                        action: 'reboot'
+                    });
+                }
+            }
+        },
+        /*
+        {
+            icon: 'sync-alt',
+
+            execute: () => {
+                if (typeof Window !== 'undefined') {
+                    Window.socket.send('system', {
+                        action: 'restart'
+                    });
+                }
+            }
+        },
+        */
+        {
+            icon: 'sync-alt',
+
+            execute: () => {
+                if (typeof Window !== 'undefined') {
+                    Window.socket.send('system', {
+                        action: 'reload'
+                    });
+                }
+            }
+        },
+        {
+            icon: 'sign-out-alt',
+
+            execute: () => {
+                if (typeof Window !== 'undefined') {
+                    Window.socket.send('system', {
+                        action: 'stop'
+                    });
+                }
+            }
+        }
+    ];
+
+    const system = {
+        rotation: 'normal'
+    };
 
     let temp = 0;
+
+    let url = '';
 
     let presets = [
         {
@@ -35,7 +99,8 @@
             url: 'https://www.www.www.brettdoyle.art/head.html'
         },
     ];
-    
+
+
     function setUrl() {
         if (typeof Window !== 'undefined') {
             Window.socket.send('frame', {
@@ -56,25 +121,16 @@
         }
     }
 
-    function shutdown() {
-        if (typeof Window !== 'undefined') {
-            Window.socket.send('system', {
-                action: 'shutdown'
-            });
-        }
-    }
-    function reboot() {
-        if (typeof Window !== 'undefined') {
-            Window.socket.send('system', {
-                action: 'reboot'
-            });
-        }
-    }
-
     if (typeof Window !== 'undefined') {
         Window.socket.on('stats', function(data) {
             temp = Math.round(data.temp / 1000);
         });
+
+        Window.socket.on('system', function(data) {
+            system.rotation = data.rotation;
+        });
+
+        Window.socket.send('system', { action: 'get-rotation' });
     }
 </script>
 
@@ -105,8 +161,13 @@
     }
 
     button {
+        padding: 0.5em;
+
         color: #fff;
         background-color: #a22846;
+    }
+    button span {
+        padding: 0 0.5em;
     }
 
     .header .info {
@@ -137,11 +198,20 @@
     }
 </style>
 
+<svelte:head>
+    <script src="https://kit.fontawesome.com/47fe49e724.js" crossorigin="anonymous"></script>
+</svelte:head>
+
 <div class="container">
     <div class="header">
         <div class="actions">
-            <button on:click={shutdown}>Power Off</button>
-            <button on:click={reboot}>Restart</button>
+            {#each actions as action}
+                {#if action.icon}
+                    <button on:click={action.execute}><i class="fas fa-{action.icon} fa-fw"></i></button>
+                {:else}
+                    <button on:click={action.execute}>{action.label}</button>
+                {/if}
+            {/each}
         </div>
         <p class="info">{temp}°</p>
     </div>
@@ -154,9 +224,9 @@
     <div class="presets">
         {#each presets as preset}
             {#if preset.name}
-                <button on:click={presetClick} data-url={preset.url}>{preset.name}</button>
+                <button on:click={presetClick} data-url={preset.url}><span>{preset.name}</span></button>
             {:else}
-                <button on:click={presetClick} data-url={preset.url}>{preset.url}</button>
+                <button on:click={presetClick} data-url={preset.url}><span>{preset.url}</span></button>
             {/if}
         {/each}
     </div>
