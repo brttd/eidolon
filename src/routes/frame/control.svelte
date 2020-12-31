@@ -91,6 +91,9 @@
             url: 'http://www.fallingfalling.com/'
         },
         {
+            url: 'https://graphics.brettdoyle.art/glsl/color/'
+        },
+        {
             url: 'https://graphics.brettdoyle.art/canvas/bml-traffic/'
         },
         {
@@ -101,6 +104,9 @@
         },
         {
             url: 'https://graphics.brettdoyle.art/canvas/rps/5'
+        },
+        {
+            url: 'https://graphics.brettdoyle.art/canvas/rps/rgb'
         },
         {
             url: 'https://www.www.www.brettdoyle.art/lines.html'
