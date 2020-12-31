@@ -11,7 +11,7 @@
 
     let messageTimeout = false;
     
-    let src = 'https://graphics.brettdoyle.art/canvas/rps/';
+    let src = 'https://graphics.brettdoyle.art/glsl/color/';
 
     let displayUrl = '';
     let displayUrlMain = '';
