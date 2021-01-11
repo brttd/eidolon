@@ -18,6 +18,7 @@
 
     let loading = true;
 
+    let paused = false;
     let tempUnsafe = false;
     let temp = 0;
 
@@ -49,10 +50,10 @@
         }
     }
 
-    function setLoading(a) {
+    function setLoading(bool) {
         rotatePos = rotateOptions[~~(Math.random() * rotateOptions.length)];
 
-        loading = a;
+        loading = bool;
     }
 
     function setMessage(data) {
@@ -83,6 +84,14 @@
 
     if (typeof Window !== 'undefined') {
         Window.socket.on('frame', function(data) {
+            if (data.paused == true) {
+                paused = true;
+            } else if (data.paused === false) {
+                setLoading(true);
+
+                paused = false;
+            }
+
             if (data.url && data.url !== src) {
                 setLoading(true);
 
@@ -111,8 +120,6 @@
 
     function onFrameLoad() {
         setLoading(false);
-
-        console.log('loaded!');
     }
 
     updateDisplayUrl();
@@ -191,6 +198,9 @@
     .loader.temp {
         background-color: #a22846;
     }
+    .loader.pause, .loader.temp {
+        z-index: 10;
+    }
 
     .loader .text {
         display: block;
@@ -233,11 +243,20 @@
     </style>
 </svelte:head>
 
-{#if tempUnsafe}
+{#if paused}
+    <div class="loader pause"
+        in:rotate="{{delay: 0, duration: 500, easing: cubicOut, origin: rotatePos }}"
+        out:rotate="{{delay: 200, duration: 600, easing: cubicIn, origin: rotatePos  }}">
+        <div class="text">
+            <p class="main">Paused</p>
+        </div>
+    </div>
+
+{:else if tempUnsafe}
 
     <div class="loader temp"
         in:rotate="{{delay: 0, duration: 500, easing: cubicOut, origin: rotatePos }}"
-        out:rotate="{{delay: 0, duration: 600, easing: cubicIn, origin: rotatePos  }}">
+        out:rotate="{{delay: 200, duration: 600, easing: cubicIn, origin: rotatePos  }}">
         <div class="text">
             <p class="main">Paused</p>
             <p class="url"><span class="url-main">{temp}</span>°</p>
