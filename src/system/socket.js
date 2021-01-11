@@ -6,21 +6,17 @@ let socket;
 
 let listeners = {};
 
-function emitMessage(channel, data) {
+let loudChannels = [];
+
+function emitMessage(channel, data, source) {
     if (!Array.isArray(listeners[channel])) return;
 
     for (let i = 0; i < listeners[channel].length; i++) {
-        listeners[channel][i](data);
+        listeners[channel][i](data, source);
     }
 }
 
 function onMessage(message) {
-    socket.clients.forEach(client => {
-        if (client !== this && client.readyState === WebSocket.OPEN) {
-            client.send(message);
-        }
-    });
-
     try {
         message = message.split('|');
 
@@ -28,9 +24,17 @@ function onMessage(message) {
             throw new Error('Message did not contain both channel and data');
         }
 
+        if (loudChannels.includes(message[0])) {
+            socket.clients.forEach(client => {
+                if (client !== this && client.readyState === WebSocket.OPEN) {
+                    client.send(message[0] + '|' + message[1]);
+                }
+            });
+        }
+
         message[1] = JSON.parse(message[1]);
 
-        emitMessage(message[0], message[1]);
+        emitMessage(message[0], message[1], this.publicObject);
     } catch (err) {
         console.error('SOCKET: Message error', err);
 
@@ -64,6 +68,14 @@ function on(channel, listener) {
     listeners[channel].push(listener);
 }
 
+function loud(channel) {
+    if (!loudChannels.includes(channel)) {
+        loudChannels.push(channel);
+    }
+
+    return;
+}
+
 function start(server) {
     if (started) return;
     started = true;
@@ -74,6 +86,10 @@ function start(server) {
     });
 
     socket.on('connection', function (ws, req) {
+        ws.publicObject = {
+            send: sendTo.bind(ws, ws)
+        };
+
         ws.on('message', onMessage);
 
         /*
@@ -85,4 +101,4 @@ function start(server) {
     })
 }
 
-export { start, send,  on }
+export { start, send,  on, loud }
