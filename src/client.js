@@ -9,14 +9,20 @@ sapper.start({
 Window.socket = function() {
 	let listeners = {};
 
+	let queue = [];
+
 	let lastConnectTime = 0;
 	
 	let webSocket;
 	
 	function send(channel, data) {
-		console.debug('SOCKET: Message sent', channel, data);
-
-		webSocket.send(channel + '|' + JSON.stringify(data));
+		if (webSocket && webSocket.readyState === WebSocket.OPEN) {
+			console.debug('SOCKET: Message sent', channel, data);
+	
+			webSocket.send(channel + '|' + JSON.stringify(data));
+		} else {
+			queue.push([channel, data]);
+		}
 	}
 
 	function listen(channel, listener) {
@@ -68,7 +74,7 @@ Window.socket = function() {
 		
 
 		webSocket.onerror = function(err) {
-			console.err('SOCKET: Error', err);
+			console.error('SOCKET: Error', err);
 		}
 
 		webSocket.onclose = function(err) {
@@ -81,6 +87,12 @@ Window.socket = function() {
 		
 		webSocket.onopen = function() {
 			console.log('SOCKET: Connected', socketUrl);
+
+			while (queue.length > 0) {
+				let msg = queue.shift();
+
+				send(msg[0], msg[1]);
+			}
 		}
 	}
 
