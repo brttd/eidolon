@@ -3,7 +3,7 @@
   "description": "TODO",
   "version": "0.0.1",
   "scripts": {
-    "dev": "sapper dev --port=8080",
+    "dev": "sapper dev",
     "build": "sapper build",
     "export": "sapper export",
     "start": "PORT=8080 node __sapper__/build"
