@@ -4,6 +4,8 @@ import { createWriteStream } from "fs";
 
 import * as socket from "./socket";
 
+import * as storage from "./storage";
+
 let stats = {
     unsafeTemp: false,
     temp: 0,
@@ -50,22 +52,20 @@ function updateStat(type, callback = false) {
 function monitorStats() {
     updateStat("temp");
 
-    if (socket) {
-        socket.send("stats", stats);
+    socket.send("stats", stats);
 
-        if (stats.temp > 70000) {
-            stats.unsafeTemp = true;
+    if (stats.temp > storage.get('system.unsafeTemp', 70000)) {
+        stats.unsafeTemp = true;
 
-            socket.send("temp-unsafe", {
-                temp: stats.temp,
-            });
-        } else if (stats.unsafeTemp && stats.temp < 65000) {
-            stats.unsafeTemp = false;
+        socket.send("temp-unsafe", {
+            temp: stats.temp,
+        });
+    } else if (stats.unsafeTemp && stats.temp < storage.get('system.safeTemp', 65000) ) {
+        stats.unsafeTemp = false;
 
-            socket.send("temp-safe", {
-                temp: stats.temp,
-            });
-        }
+        socket.send("temp-safe", {
+            temp: stats.temp,
+        });
     }
 }
 
@@ -192,15 +192,69 @@ function onSystemMessage(message) {
     }
 }
 
+function onStorageSet(data) {
+    if (Array.isArray(data)) {
+        if (data.length === 2 && typeof(data[0]) === 'string') {
+            storage.set(data[0], data[1]);
+            
+            socket.send('storage-get', {
+                key: data[0],
+                value: data[1],
+            });
+
+            return;
+        }
+
+        for (let i = 0; i < data.length; i++) {
+            onStorageSet(data[i]);
+        }
+    } else if (typeof data === 'object') {
+        storage.set(data.key, data.value);
+
+        socket.send('storage-get', {
+            key: data.key,
+            value: data.value,
+        });
+    }
+}
+
+function onStorageGet(data) {
+    let value;
+    let key;
+
+    if (Array.isArray(data)) {
+        key = data[0];
+        value = data.length >= 2 ? data[1] : undefined
+
+    } else if (typeof(data) === 'object') {
+        key = data.key;
+        value = data.value;
+    }
+
+    if (key) {
+        value = storage.get(key, value);
+    
+        socket.send('storage-get', {
+            key: key,
+            value: value
+        });
+    }
+}
+
 function start(server) {
     if (started) return;
     started = true;
+
+    socket.loud('frame');
 
     socket.start(server);
 
     log('system', 'started');
 
     socket.on("system", onSystemMessage);
+
+    socket.on("storage-set", onStorageSet);
+    socket.on("storage-get", onStorageGet);
 
     setInterval(monitorStats, 3 * 1000);
 }
