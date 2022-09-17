@@ -1,3 +1,17 @@
+<svelte:head>
+	<title>Eidolon | Index</title>
+</svelte:head>
+
+<div class="main">
+	<h1>Eidolon</h1>
+
+	<p>Go to:</p>
+	<ul>
+		<li><a href="frame">frame</a></li>
+		<li><a href="frame/control">frame/control</a></li>
+	</ul>
+</div>
+
 <style>
 	.main {
 		box-sizing: border-box;
@@ -33,24 +47,9 @@
 	}
 
 	a {
-		font-family: 'Anonymous Pro', monospace;
+		font-family: "Anonymous Pro", monospace;
 		text-decoration: none;
 
 		color: #fff;
 	}
 </style>
-
-<svelte:head>
-	<title>Eidolon | Index</title>
-</svelte:head>
-
-<div class="main">
-	<h1>Eidolon</h1>
-	
-	<p>Go to:</p>
-	<ul>
-		<li><a href="frame">frame</a></li>
-		<li><a href="frame/control">frame/control</a></li>
-	</ul>
-
-</div>
