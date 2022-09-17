@@ -153,6 +153,25 @@
 		setUrl(this.getAttribute("data-url"));
 	}
 
+	function presetDelete() {
+		let url = this.getAttribute("data-url");
+
+		for (let i = presets.length - 1; i >= 0; i--) {
+			if (presets[i].url === url) {
+				presets.splice(i, 1);
+			}
+		}
+
+		presets = presets;
+
+		if (typeof Window !== "undefined") {
+			Window.socket.send("storage-set", {
+				key: "presets",
+				value: presets,
+			});
+		}
+	}
+
 	function onInputKey(event) {
 		if (event.code.toLowerCase() === "enter") {
 			setUrl(frame.url);
@@ -318,22 +337,32 @@
 	</div>
 
 	<div class="presets">
-		{#each presets as preset, i}
-			{#if preset.name}
+		{#each presets as preset (preset.url)}
+			<div class="preset">
 				<button
-					in:fly={{ y: -50, duration: 100, delay: i * 100 }}
-					out:fly={{ y: 50, duration: 200, delay: i * 100 }}
-					on:click={presetClick}
-					data-url={preset.url}><span>{preset.name}</span></button
+					in:fly={{ x: -50, duration: 100 }}
+					out:fly={{ x: 50, duration: 200 }}
+					on:click={presetDelete}
+					class="inactive delete-btn"
+					data-url={preset.url}><i class="fas fa-trash fa-fw" /></button
 				>
-			{:else}
-				<button
-					in:fly={{ y: -50, duration: 100, delay: i * 100 }}
-					out:fly={{ y: 50, duration: 200, delay: i * 100 }}
-					on:click={presetClick}
-					data-url={preset.url}><span>{preset.url}</span></button
-				>
-			{/if}
+
+				{#if preset.name}
+					<button
+						in:fly={{ x: -50, duration: 100 }}
+						out:fly={{ x: 50, duration: 200 }}
+						on:click={presetClick}
+						data-url={preset.url}><span>{preset.name}</span></button
+					>
+				{:else}
+					<button
+						in:fly={{ x: -50, duration: 100 }}
+						out:fly={{ x: 50, duration: 200 }}
+						on:click={presetClick}
+						data-url={preset.url}><span>{preset.url}</span></button
+					>
+				{/if}
+			</div>
 		{/each}
 	</div>
 </div>
@@ -416,9 +445,16 @@
 		margin-left: 1em;
 	}
 
-	.presets button {
-		display: block;
+	.presets .preset {
+		margin: 1em 0;
+	}
 
-		margin: 1em;
+	.presets button {
+		display: inline-block;
+
+		margin: 0 1em;
+	}
+	.presets .delete-btn {
+		margin-right: 0;
 	}
 </style>
