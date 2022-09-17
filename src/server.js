@@ -8,7 +8,7 @@ import * as system from "./system";
 const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === "development";
 
-let server = polka() // You can also use Express
+let server = polka()
 	.use(
 		compression({ threshold: 0 }),
 		sirv("static", { dev }),
