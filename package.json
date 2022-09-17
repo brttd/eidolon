@@ -1,6 +1,6 @@
 {
-  "name": "TODO",
-  "description": "TODO",
+  "name": "Eidolon",
+  "description": "Mini Svelte server & client for graphical display frame - running on Raspberry PI",
   "version": "0.0.1",
   "scripts": {
     "dev": "sapper dev",
