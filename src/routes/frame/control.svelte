@@ -92,7 +92,10 @@
 	let frame = {
 		url: "",
 		paused: false,
+		playlist: false,
+		playlistTime: 60,
 	};
+	let lastSafePlaylistTime = frame.playlistTime;
 
 	let presets = [];
 
@@ -115,6 +118,16 @@
 		}
 	}
 
+	function setPlaylist(playlist) {
+		frame.playlist = playlist;
+
+		if (typeof Window !== "undefined") {
+			Window.socket.send("frame", {
+				playlist: frame.playlist,
+			});
+		}
+	}
+
 	function setUrl(url) {
 		frame.url = url;
 
@@ -125,7 +138,7 @@
 		}
 	}
 
-	function addPreset(url) {
+	function addPreset() {
 		presets.push({ url: frame.url });
 
 		if (typeof Window !== "undefined") {
@@ -143,6 +156,19 @@
 	function onInputKey(event) {
 		if (event.code.toLowerCase() === "enter") {
 			setUrl(frame.url);
+		}
+	}
+
+	function onPlaylistTimeChange(event) {
+		if (isFinite(frame.playlistTime) && frame.playlistTime > 0) {
+			Window.socket.send("storage-set", {
+				key: "playlist-time",
+				value: frame.playlistTime,
+			});
+
+			lastSafePlaylistTime = frame.playlistTime;
+		} else if (event.code.toLowerCase() !== "backspace") {
+			frame.playlistTime = lastSafePlaylistTime;
 		}
 	}
 
@@ -171,6 +197,13 @@
 					presets = data.value;
 					break;
 
+				case "playlist-time":
+					if (frame.playlistTime !== data.value) {
+						frame.playlistTime = data.value;
+					}
+
+					break;
+
 				case "system.unsafeTemp":
 					system.unsafeTemp = data.value;
 					break;
@@ -183,6 +216,10 @@
 
 		Window.socket.send("system", { action: "get-rotation" });
 		Window.socket.send("storage-get", { key: "presets", value: presets });
+		Window.socket.send("storage-get", {
+			key: "playlist-time",
+			value: frame.playlistTime,
+		});
 	}
 </script>
 
@@ -221,6 +258,28 @@
 					}}><i class="fas fa-pause-circle fa-fw" /></button
 				>
 			{/if}
+
+			{#if frame.playlist}
+				<button
+					on:click={() => {
+						setPlaylist(false);
+					}}><i class="fas fa-fast-forward fa-fw" /></button
+				>
+			{:else}
+				<button
+					class="inactive"
+					on:click={() => {
+						setPlaylist(true);
+					}}><i class="fas fa-fast-forward fa-fw" /></button
+				>
+			{/if}
+
+			<input
+				type="number"
+				min="1"
+				bind:value={frame.playlistTime}
+				on:keyup={onPlaylistTimeChange}
+			/>
 
 			<span class="seperator" />
 
@@ -332,7 +391,8 @@
 
 		margin-bottom: -1em;
 	}
-	.header .actions button {
+	.header .actions button,
+	.header .actions input {
 		margin-right: 1em;
 		margin-bottom: 1em;
 	}
@@ -342,6 +402,10 @@
 		border-right: 1px solid black;
 
 		margin-right: 1em;
+	}
+
+	.header .actions input {
+		max-width: 8ch;
 	}
 
 	.main input {

@@ -13,6 +13,11 @@
 
 	let src = "https://graphics.brettdoyle.art/glsl/color/";
 
+	let playlist = [];
+	let recentlyPlayed = [];
+	let playlistTime = 0;
+	let defaultPlaylistTime = 60;
+
 	let displayUrl = "";
 	let displayUrlMain = "";
 
@@ -85,9 +90,47 @@
 		}, 1000 * 3);
 	}
 
+	function load(url) {
+		if (src === url) return;
+
+		setLoading(true);
+
+		setTimeout(() => {
+			src = url;
+			updateDisplayUrl();
+		}, 300);
+	}
+
+	function processPlaylist() {
+		if (playlistTime === 0) return;
+		if (playlist.length === 0) return;
+
+		let next = ~~(Math.random() * playlist.length);
+
+		while (recentlyPlayed.includes(playlist[next])) {
+			next = (next + 1) % playlist.length;
+
+			if (playlist[next] === src) {
+				next = (next + 1) % playlist.length;
+			}
+		}
+
+		load(playlist[next]);
+
+		if (playlist.length > 3) {
+			recentlyPlayed.push(playlist[next]);
+		}
+
+		if (recentlyPlayed.length > ~~(playlist.length / 3 + 0.5)) {
+			recentlyPlayed.length = ~~(playlist.length / 3 + 0.5);
+		}
+
+		setTimeout(processPlaylist, playlistTime * 1000);
+	}
+
 	if (typeof Window !== "undefined") {
 		Window.socket.on("frame", function (data) {
-			if (data.paused == true) {
+			if (data.paused === true) {
 				paused = true;
 			} else if (data.paused === false) {
 				setLoading(true);
@@ -95,13 +138,18 @@
 				paused = false;
 			}
 
-			if (data.url && data.url !== src) {
-				setLoading(true);
+			if (data.playlist === true) {
+				if (playlistTime === 0) {
+					playlistTime = defaultPlaylistTime;
 
-				setTimeout(() => {
-					src = data.url;
-					updateDisplayUrl();
-				}, 300);
+					processPlaylist();
+				}
+			} else {
+				playlistTime = 0;
+			}
+
+			if (data.url && data.url !== src) {
+				load(data.url);
 			}
 		});
 
@@ -118,6 +166,30 @@
 
 		Window.socket.on("stats", function (data) {
 			temp = Math.round(data.temp / 1000);
+		});
+
+		Window.socket.on("storage-get", function (data) {
+			if (data.key === "presets") {
+				playlist = [];
+
+				for (let i = 0; i < data.value.length; i++) {
+					playlist.push(data.value[i].url);
+				}
+
+				recentlyPlayed = [];
+			} else if (data.key === "playlist-time") {
+				defaultPlaylistTime = data.value;
+
+				if (playlistTime !== 0) {
+					playlistTime = defaultPlaylistTime;
+				}
+			}
+		});
+
+		Window.socket.send("storage-get", { key: "presets", value: playlist });
+		Window.socket.send("storage-get", {
+			key: "playlist-time",
+			value: defaultPlaylistTime,
 		});
 	}
 
